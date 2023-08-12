@@ -1144,6 +1144,33 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     return error == ZIP_OK;
 }
 
+- (BOOL)writeData:(NSData *)data filename:(nullable NSString *)filename compressionLevel:(int)compressionLevel password:(nullable NSString *)password AES:(BOOL)aes startNewEntry:(BOOL)startNewEntry closeEntry:(BOOL)closeEntry
+{
+    if (!_zip) {
+        return NO;
+    }
+    if (!data) {
+        return NO;
+    }
+    
+    int error = ZIP_OK;
+    
+    if (startNewEntry) {
+        zip_fileinfo zipInfo = {};
+        [SSZipArchive zipInfo:&zipInfo setDate:[NSDate date]];
+        error = _zipOpenEntry(_zip, filename, &zipInfo, compressionLevel, password, aes);
+    }
+
+    zipWriteInFileInZip(_zip, data.bytes, (unsigned int)data.length);
+    
+    if (closeEntry) {
+        zipCloseFileInZip(_zip);
+    }
+
+    return error == ZIP_OK;
+}
+
+
 - (BOOL)close
 {
     NSAssert((_zip != NULL), @"[SSZipArchive] Attempting to close an archive which was never opened");
